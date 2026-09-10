@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gridlockd.lol — sponsor the grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asphalt:#17171b;--panel:#1e1e24;--panel-2:#25252d;--line:#31313b;
+  --bone:#e9e7e2;--muted:#8b8994;--dim:#5d5b66;
+  --hazard:#ffd400;--kerb:#ff4438;--gain:#62d26f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--asphalt);color:var(--bone);font-family:'Barlow Condensed',system-ui,sans-serif;font-size:16px;line-height:1.3;display:flex;flex-direction:column}
+.num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--hazard);outline-offset:2px}
+
+.kerb{height:5px;flex:none;background:repeating-linear-gradient(115deg,var(--kerb) 0 13px,#f4f2ec 13px 26px)}
+
+.masthead{flex:none;display:flex;align-items:center;gap:20px;padding:9px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.wordmark{font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1;text-transform:lowercase;white-space:nowrap}
+.wordmark i{font-style:normal;color:var(--hazard)}
+.wordmark span{color:var(--dim);font-weight:500}
+.pitch{font-size:15px;color:var(--muted);flex:1;min-width:0;max-width:44ch}
+.readout{display:flex;gap:20px}
+.readout div{display:flex;flex-direction:column}
+.readout dt{font-size:12px;color:var(--dim);letter-spacing:.04em}
+.readout dd{font-size:18px;font-weight:600}
+.lights{display:flex;flex-direction:column;align-items:flex-end;background:var(--asphalt);border:1px solid var(--line);padding:5px 13px;min-width:140px}
+.lights small{font-size:11.5px;color:var(--dim);letter-spacing:.04em}
+.lights .clock{font-size:22px;font-weight:600;color:var(--hazard);line-height:1.1}
+.lights.live .clock{color:var(--kerb)}
+
+.radio{flex:none;display:flex;align-items:center;gap:14px;padding:6px 16px;background:#141418;border-bottom:1px solid var(--line);overflow:hidden}
+.radio .tag{font-size:12px;font-weight:700;color:var(--kerb);letter-spacing:.08em;flex:none}
+.radio ul{list-style:none;display:flex;gap:26px;font-size:14.5px;color:var(--muted);white-space:nowrap;overflow:hidden;min-width:0}
+.radio li{flex:none}
+.radio li em{font-style:normal;color:var(--bone)}
+.radio li.new{color:var(--hazard)}
+
+.shell{flex:1;display:grid;grid-template-columns:308px minmax(0,1fr);min-height:0}
+.rail{border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.tabs{flex:none;display:flex;border-bottom:1px solid var(--line)}
+.tab{flex:1;padding:9px 4px;font-size:14px;font-weight:500;color:var(--dim);border-right:1px solid var(--line);position:relative;letter-spacing:.02em}
+.tab:last-child{border-right:none}
+.tab:hover{color:var(--bone)}
+.tab[aria-selected="true"]{color:var(--bone);background:var(--panel-2)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;inset:auto 0 -1px 0;height:2px;background:var(--hazard)}
+.tab b{display:block;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;color:var(--dim)}
+.rows{flex:1;overflow-y:auto;min-height:0}
+.rows::-webkit-scrollbar{width:7px}
+.rows::-webkit-scrollbar-thumb{background:var(--line)}
+.row{display:grid;grid-template-columns:30px 4px 1fr auto;align-items:center;gap:8px;width:100%;padding:6px 11px 6px 7px;border-bottom:1px solid #26262e;text-align:left}
+.row:hover{background:var(--panel-2)}
+.row .pos{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--muted);text-align:right}
+.row.front .pos{color:var(--hazard)}
+.bar{width:4px;height:24px;border-radius:1px}
+.who{min-width:0}
+.who b{display:block;font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{display:block;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who b.open{color:var(--dim);font-style:italic;font-weight:400}
+.money{font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;line-height:1.2}
+.money s{display:block;font-size:10.5px;color:var(--dim);text-decoration:none}
+.mine{font-size:10.5px;background:var(--hazard);color:#14140f;padding:0 4px;font-weight:600;letter-spacing:.04em}
+.delta{font-size:12.5px;font-family:'IBM Plex Mono',monospace}
+.up{color:var(--gain)}.down{color:var(--kerb)}
+
+.circuit{display:flex;flex-direction:column;min-width:0;min-height:0;background:#131317}
+.circuit-head{flex:none;display:flex;align-items:baseline;gap:12px;padding:8px 16px 0}
+.circuit-head h2{font-size:17px;font-weight:600}
+.circuit-head h2 em{font-style:normal;color:var(--hazard)}
+.circuit-head .flag{margin-left:auto;font-size:12.5px;font-weight:600;padding:2px 9px;letter-spacing:.05em}
+.flag.green{background:#1d3a20;color:var(--gain)}
+.flag.chq{background:#2e2e36;color:var(--bone)}
+.canvas{flex:1;min-height:0;padding:2px 12px 6px}
+svg{display:block;width:100%;height:100%}
+.hot{cursor:pointer}
+.plate rect.body{transition:stroke .12s}
+.hot:hover rect.body{stroke:var(--bone)}
+
+.podium{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.step{background:var(--panel);padding:7px 14px;display:flex;align-items:center;gap:9px;min-width:0}
+.step .pl{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;flex:none}
+.step:nth-child(1) .pl{color:var(--hazard)}
+.step:nth-child(2) .pl{color:#b9b7c2}
+.step:nth-child(3) .pl{color:#c08b52}
+.step img{width:16px;height:16px;flex:none}
+.step b{font-size:15.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step small{margin-left:auto;font-size:12px;color:var(--dim);font-family:'IBM Plex Mono',monospace;flex:none}
+
+.scrim{position:fixed;inset:0;background:rgba(10,10,12,.74);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+.scrim.on{display:flex}
+.sheet{width:min(460px,100%);max-height:88vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.sheet-top{display:flex;align-items:flex-start;gap:12px;padding:15px 18px 12px;border-bottom:1px solid var(--line)}
+.sheet-top h3{font-size:23px;font-weight:600;line-height:1.05}
+.sheet-top p{font-size:13.5px;color:var(--muted);margin-top:2px}
+.x{margin-left:auto;font-size:19px;color:var(--dim);line-height:1;padding:2px 6px;flex:none}
+.x:hover{color:var(--bone)}
+.sheet-body{padding:14px 18px 18px}
+.held{display:flex;align-items:center;gap:9px;margin-bottom:13px;padding:9px 11px;background:var(--asphalt);border:1px solid var(--line)}
+.held img{width:18px;height:18px;flex:none}
+.held b{font-size:16px;font-weight:500}
+.held span{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:13px;color:var(--dim);margin-bottom:3px;letter-spacing:.03em}
+input[type=text]{width:100%;background:var(--asphalt);border:1px solid var(--line);color:var(--bone);padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:16px}
+input.num{font-family:'IBM Plex Mono',monospace;font-size:17px}
+input:hover{border-color:#3f3f4a}
+input::placeholder{color:#4f4d58}
+.stepper{display:flex;gap:6px}
+.stepper input{flex:1}
+.stepper button{border:1px solid var(--line);padding:0 13px;font-size:14px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.stepper button:hover{border-color:var(--muted);color:var(--bone)}
+.preview{display:flex;align-items:center;gap:9px;margin:2px 0 12px;padding:8px 10px;background:#131317;border:1px solid var(--line)}
+.preview .chip{display:flex;align-items:center;gap:7px;background:#1b1b21;border:1px solid #41414d;padding:4px 9px 4px 0;min-width:0}
+.preview .chip i{width:4px;align-self:stretch;background:var(--hazard);flex:none}
+.preview .chip img{width:14px;height:14px;flex:none}
+.preview .chip b{font-size:15px;font-weight:500;white-space:nowrap}
+.preview span{font-size:12.5px;color:var(--dim);margin-left:auto;text-align:right}
+.swatches{display:flex;gap:5px;flex-wrap:wrap}
+.sw{width:26px;height:26px;border:2px solid transparent;border-radius:2px}
+.sw[aria-pressed="true"]{border-color:var(--bone)}
+.err{color:var(--kerb);font-size:14px;min-height:20px;margin:3px 0}
+.go{width:100%;background:var(--hazard);color:#14140f;font-weight:700;font-size:17px;padding:11px 20px;border:1px solid var(--hazard)}
+.go:hover{background:#ffe14d}
+.go[disabled]{opacity:.45;cursor:not-allowed}
+.terms{font-size:13px;color:var(--dim);line-height:1.45;margin-top:11px}
+.terms b{color:var(--muted);font-weight:500}
+
+@media (max-width:880px){.shell{grid-template-columns:250px minmax(0,1fr)}.pitch{display:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="kerb"></div>
+
+<header class="masthead">
+  <div class="wordmark">gridlock<i>d</i><span>.lol</span></div>
+  <p class="pitch">Twenty-two cars, one brand on each. Take a slot, hold it, or lose it to someone who wants it more.</p>
+  <div class="readout">
+    <div><dt>On the grid</dt><dd class="num" id="stat-claimed">22/22</dd></div>
+    <div><dt>Grid value</dt><dd class="num" id="stat-value">£0</dd></div>
+  </div>
+  <div class="lights" id="lights">
+    <small id="lights-label">Lights out in</small>
+    <div class="clock num" id="clock">00:00:30</div>
+  </div>
+</header>
+
+<div class="radio">
+  <span class="tag">RADIO</span>
+  <ul id="radio-feed"></ul>
+</div>
+
+<div class="shell">
+  <section class="rail" aria-label="Sponsor slots">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="rows" id="rows" role="list"></div>
+  </section>
+
+  <section class="circuit">
+    <div class="circuit-head">
+      <h2>Circuit <em id="circuit-name"></em></h2>
+      <span class="flag green" id="flag">Grid open</span>
+    </div>
+    <div class="canvas">
+      <svg viewBox="0 0 900 512" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="trk-t">
+        <title id="trk-t">Circuit schematic with the starting grid and every sponsor name plate</title>
+        <path id="track" d="M200 452 L700 452 C790 452 845 418 845 350 L845 190 C845 120 795 84 725 84 L285 84 C205 84 150 124 130 194 L95 318 C78 383 120 452 200 452 Z"
+              fill="none" stroke="#2c2c34" stroke-width="26" stroke-linejoin="round"/>
+        <use href="#track" fill="none" stroke="#3c3c47" stroke-width=".7" stroke-dasharray="5 9"/>
+        <g id="kerbs" stroke-width="4" fill="none" opacity=".8"></g>
+        <rect x="252" y="438" width="3" height="28" fill="#e9e7e2" opacity=".85"/>
+        <g class="hot" id="a-gantry" tabindex="0" role="button" aria-label="Start-finish gantry">
+          <rect class="body" x="206" y="400" width="96" height="18" fill="#1b1b21" stroke="#41414d" stroke-width=".9"/>
+          <text x="254" y="413" text-anchor="middle" font-size="11.5" fill="#8b8994" font-family="IBM Plex Mono, monospace">GANTRY</text>
+        </g>
+        <g id="boards"></g>
+        <g id="corners"></g>
+        <g id="cars"></g>
+        <g class="hot" id="a-safety" tabindex="0" role="button" aria-label="Safety car">
+          <rect class="body" x="638" y="22" width="124" height="20" fill="#1b1b21" stroke="#41414d" stroke-width=".9"/>
+          <text x="700" y="36.5" text-anchor="middle" font-size="12" fill="#8b8994" font-family="IBM Plex Mono, monospace">SAFETY CAR</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+</div>
+
+<div class="podium" id="podium"></div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="bid-title">
+  <div class="sheet">
+    <div class="sheet-top">
+      <div><h3 id="bid-title">Grid slot</h3><p id="bid-what"></p></div>
+      <button class="x" id="close" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="held" id="bid-held"></div>
+      <div class="field">
+        <label for="bid-amt" id="bid-min-label">Your bid</label>
+        <div class="stepper">
+          <input type="text" inputmode="numeric" class="num" id="bid-amt" value="0">
+          <button id="b-min" type="button">min</button>
+          <button id="b-2x" type="button">2&times;</button>
+          <button id="b-5x" type="button">5&times;</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-brand">Brand name, printed on the car</label>
+        <input type="text" id="f-brand" placeholder="Acme">
+      </div>
+      <div class="field">
+        <label for="f-url">Domain, your logo is pulled from here</label>
+        <input type="text" id="f-url" placeholder="acme.com">
+      </div>
+      <div class="field"><label>Livery</label><div class="swatches" id="swatches"></div></div>
+      <div class="preview" id="preview"></div>
+      <p class="err" id="bid-err" role="alert"></p>
+      <button class="go" id="take">Take the slot</button>
+      <p class="terms">Your name plate and logo go live the moment payment lands, with a click-tracked link. If someone outbids you, your full stake comes back as <b>grid credit</b> to spend on any slot. Race results are random and pay nothing, so you're buying the slot, not a bet.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const LIVERY=["#ff4438","#ffd400","#3ec9c0","#7b6cf6","#8ec63f","#f46bb0","#3d8de0","#ff8a2b","#b06cf6","#cfd3da"];
+const ICON=d=>"https://www.google.com/s2/favicons?domain="+encodeURIComponent(d)+"&sz=64";
+
+const CAR_BRANDS=[["Shipyard","shipyard.dev"],["Kettle","kettle.so"],["Monolith","monolith.sh"],["Paperclip","paperclip.app"],
+["Halfpipe","halfpipe.io"],["Tugboat","tugboat.cc"],["Nimbus","nimbusforms.com"],["Loomstack","loomstack.dev"],
+["Quarry","quarry.tools"],["Beacon HQ","beaconhq.io"],["Slateboard","slateboard.app"],["Foghorn","foghorn.email"],
+["Coldbrew","coldbrew.dev"],["Marlin","marlin.host"],["Pebbledash","pebbledash.co"],[null,null],
+["Ironwood","ironwood.ai"],[null,null],["Dovetail","dovetail.build"],[null,null],["Saltmarsh","saltmarsh.io"],[null,null]];
+
+const A=[];
+const tierOf=i=>i<4?"front":i<14?"mid":"back";
+const floorOf=i=>i<4?150:i<14?75:25;
+
+CAR_BRANDS.forEach((b,i)=>{
+  const tier=tierOf(i),floor=floorOf(i);
+  A.push({id:"car"+i,cat:"cars",slot:i,grid:i,tier,label:"Grid slot P"+(i+1),
+    what:"Row "+(Math.floor(i/2)+1)+" \u00b7 "+(tier==="front"?"front of the grid":tier==="mid"?"midfield":"back of the grid"),
+    brand:b[0],url:b[1],colour:b[0]?LIVERY[i%LIVERY.length]:"#3a3a44",
+    bid:b[0]?Math.round(floor*Math.pow(1.5,(i*7%4))):0,floor,mine:false,pts:0});
+});
+
+const BOARD_POS=[[560,486],[690,486],[812,452],[866,268],[812,56],[600,50],[420,50],[236,62],[132,150],[92,290],[112,418],[300,486]];
+BOARD_POS.forEach((p,i)=>{
+  const taken=i%4!==3;
+  A.push({id:"brd"+i,cat:"hoardings",slot:i,x:p[0],y:p[1],
+    label:"Trackside board "+String(i+1).padStart(2,"0"),what:"Barrier hoarding, in shot every lap",
+    brand:taken?["Rooftile","Gasket","Anvil","Cobble","Tallow","Rivet","Hark","Mudlark","Vellum"][i%9]:null,
+    url:taken?"board"+(i+1)+".io":null,colour:taken?LIVERY[(i+3)%LIVERY.length]:"#3a3a44",
+    bid:taken?[15,22,34,15,50,22,15,34,22,15,15,22][i]:0,floor:15,mine:false});
+});
+
+const CORNER_POS=[[818,416],[860,150],[760,58],[300,56],[126,138],[86,328],[152,450]];
+const CORNER_NAMES=["Rooftile Bend","The Kettle",null,"Anvil Curve",null,"Cobble Hook",null];
+CORNER_POS.forEach((p,i)=>{
+  A.push({id:"cnr"+i,cat:"corners",slot:i,x:p[0],y:p[1],label:"Turn "+(i+1),
+    what:"Naming rights, on the map and in the result card",
+    brand:CORNER_NAMES[i],url:CORNER_NAMES[i]?CORNER_NAMES[i].toLowerCase().replace(/[^a-z]/g,"")+".com":null,
+    colour:CORNER_NAMES[i]?LIVERY[(i+6)%LIVERY.length]:"#3a3a44",
+    bid:CORNER_NAMES[i]?[45,68,0,30,0,30,0][i]:0,floor:30,mine:false});
+});
+
+for(let i=0;i<11;i++){
+  const taken=i<6;
+  A.push({id:"team"+i,cat:"teams",slot:i,label:"Team "+String.fromCharCode(65+i),
+    what:"Title sponsor over cars P"+(i*2+1)+" and P"+(i*2+2),
+    brand:taken?["Hollow Point","Kingfisher","Ratchet","Bramble","Oxide","Tallowmere"][i]:null,
+    url:taken?"team"+(i+1)+".co":null,colour:taken?LIVERY[i%LIVERY.length]:"#3a3a44",
+    bid:taken?[220,180,140,140,110,110][i]:0,floor:110,mine:false});
+}
+
+[["Circuit name","The whole track takes your name",480,null,null],
+["Race title","Today's race is called after you, resets at midnight",260,"Foghorn","foghorn.email"],
+["Safety car","Deploys on every incident, logo on the roof",300,null,null],
+["Podium backdrop","Behind the top three in the result card people share",240,"Quarry","quarry.tools"],
+["Start-finish gantry","The whole grid drives under it",220,"Anvil","anvil.dev"],
+["Tyre supplier","Named on every stint in the tower",300,null,null],
+["Fastest lap","Your name on the purple lap, every race",160,"Rivet","rivet.sh"]].forEach((s,i)=>{
+  A.push({id:"spc"+i,cat:"specials",slot:i,label:s[0],what:s[1],brand:s[3],url:s[4],
+    colour:s[3]?LIVERY[(i+2)%LIVERY.length]:"#3a3a44",bid:s[3]?s[2]:0,floor:s[2],mine:false});
+});
+
+const CATS=[{k:"cars",n:"Cars"},{k:"teams",n:"Teams"},{k:"hoardings",n:"Boards"},{k:"corners",n:"Corners"},{k:"specials",n:"Marquee"}];
+let tab="cars",sel=null,livery=LIVERY[0],racing=false;
+const feed=[];
+
+const $=s=>document.querySelector(s);
+const SVGNS="http://www.w3.org/2000/svg";
+const el=(t,a)=>{const n=document.createElementNS(SVGNS,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
+const money=n=>"\u00a3"+Math.round(n).toLocaleString("en-GB");
+const minBid=a=>a.brand?Math.ceil(a.bid*1.5):a.floor;
+const inCat=k=>A.filter(a=>a.cat===k);
+
+const path=$("#track"),LEN=path.getTotalLength(),START=LEN-58;
+const at=d=>path.getPointAtLength(((d%LEN)+LEN)%LEN);
+
+(function(){
+  const g=$("#kerbs");
+  [[.13,.18],[.34,.39],[.56,.61],[.78,.83]].forEach(function(r){
+    const a=r[0],b=r[1],d=path.getAttribute("d");
+    g.appendChild(el("path",{d:d,fill:"none",stroke:"#c9c5bb","stroke-dashoffset":-a*LEN,"stroke-dasharray":((b-a)*LEN)+" "+LEN}));
+    g.appendChild(el("path",{d:d,fill:"none",stroke:"#ff4438","stroke-dashoffset":-a*LEN,"stroke-dasharray":"9 9 "+((b-a)*LEN)+" "+LEN}));
+  });
+})();
+
+const PW=126,PH=22;
+function gridXY(i){const col=i%2,row=Math.floor(i/2);return{x:352+col*152,y:126+row*25+col*12};}
+
+const N={};
+function plate(a,w,h,fs){
+  const g=el("g",{class:"hot plate",tabindex:"0",role:"button","aria-label":a.label});
+  const body=el("rect",{class:"body",x:0,y:0,width:w,height:h,rx:2,fill:"#1b1b21",stroke:"#41414d","stroke-width":.9});
+  const stripe=el("rect",{x:0,y:0,width:4,height:h,fill:a.colour});
+  const img=el("image",{x:9,y:(h-14)/2,width:14,height:14,preserveAspectRatio:"xMidYMid slice"});
+  const txt=el("text",{x:28,y:h/2+fs*0.35,"font-size":fs,"font-family":"Barlow Condensed, sans-serif","font-weight":"500",fill:"#e9e7e2"});
+  g.appendChild(body);g.appendChild(stripe);g.appendChild(img);g.appendChild(txt);
+  g.addEventListener("click",function(){openSheet(a);});
+  g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openSheet(a);}});
+  return {g:g,body:body,stripe:stripe,img:img,txt:txt};
+}
+
+inCat("cars").forEach(function(c){
+  const p=plate(c,PW,PH,15);
+  $("#cars").appendChild(p.g);
+  const gp=gridXY(c.grid);
+  N[c.id]=Object.assign(p,{gx:gp.x,gy:gp.y,x:gp.x,y:gp.y,dist:START-c.grid*9,lane:c.grid%2?9:-9,prog:0,pace:1});
+});
+
+inCat("hoardings").forEach(function(b){
+  const p=plate(b,76,15,11.5);
+  p.g.setAttribute("transform","translate("+(b.x-38)+" "+(b.y-7.5)+")");
+  $("#boards").appendChild(p.g);N[b.id]=p;
+});
+
+inCat("corners").forEach(function(c){
+  const g=el("g",{class:"hot",tabindex:"0",role:"button","aria-label":c.label});
+  g.appendChild(el("rect",{class:"body",x:c.x-9,y:c.y-9,width:18,height:18,rx:9,fill:"#1b1b21",stroke:"#41414d","stroke-width":.9}));
+  const t=el("text",{x:c.x,y:c.y+4,"text-anchor":"middle","font-size":11.5,"font-family":"IBM Plex Mono, monospace",fill:"#8b8994"});
+  t.textContent="T"+(c.slot+1);
+  const lbl=el("text",{x:c.x,y:c.y-15,"text-anchor":"middle","font-size":12.5,"font-family":"Barlow Condensed, sans-serif",fill:"#8b8994"});
+  g.appendChild(t);g.appendChild(lbl);
+  g.addEventListener("click",function(){openSheet(c);});
+  g.addEventListener("keydown",function(e){if(e.key==="Enter")openSheet(c);});
+  $("#corners").appendChild(g);N[c.id]={g:g,body:g.querySelector("rect"),txt:lbl};
+});
+
+$("#a-safety").onclick=function(){openSheet(A.find(a=>a.label==="Safety car"));};
+$("#a-gantry").onclick=function(){openSheet(A.find(a=>a.label==="Start-finish gantry"));};
+
+function paintPlates(){
+  inCat("cars").concat(inCat("hoardings")).forEach(function(a){
+    const n=N[a.id];if(!n)return;
+    n.stripe.setAttribute("fill",a.colour);
+    n.txt.textContent=a.brand||("Open \u00b7 "+money(a.floor));
+    n.txt.setAttribute("fill",a.brand?"#e9e7e2":"#6e6c78");
+    n.body.setAttribute("stroke",a.brand?"#41414d":"#33333d");
+    n.body.setAttribute("stroke-dasharray",a.brand?"none":"3 3");
+    if(a.url){n.img.setAttribute("href",ICON(a.url));n.img.style.display="";n.txt.setAttribute("x",28);}
+    else{n.img.style.display="none";n.txt.setAttribute("x",12);}
+  });
+  inCat("corners").forEach(function(c){N[c.id].txt.textContent=c.brand||"";});
+}
+
+function place(){
+  inCat("cars").forEach(function(c){
+    const n=N[c.id];
+    n.g.setAttribute("transform","translate("+(n.x-PW/2).toFixed(1)+" "+(n.y-PH/2).toFixed(1)+")");
+  });
+}
+function trackXY(n){
+  const p=at(n.dist),q=at(n.dist+2);
+  const ang=Math.atan2(q.y-p.y,q.x-p.x);
+  return{x:p.x+Math.sin(ang)*n.lane,y:p.y-Math.cos(ang)*n.lane};
+}
+
+function renderTabs(){
+  $("#tabs").innerHTML=CATS.map(function(c){
+    const l=inCat(c.k),t=l.filter(a=>a.brand).length;
+    return '<button class="tab" role="tab" aria-selected="'+(c.k===tab)+'" data-k="'+c.k+'">'+c.n+'<b>'+t+'/'+l.length+'</b></button>';
+  }).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(function(b){b.onclick=function(){tab=b.dataset.k;renderTabs();renderRows();};});
+}
+function renderRows(){
+  const list=inCat(tab).slice();
+  if(tab==="cars")list.sort((a,b)=>a.grid-b.grid);
+  $("#rows").innerHTML=list.map(function(a){
+    const pos=tab==="cars"?"P"+(a.grid+1):String(a.slot+1).padStart(2,"0");
+    const name=a.brand?"<b>"+a.brand+"</b>":'<b class="open">Open \u00b7 from '+money(a.floor)+"</b>";
+    const price=a.brand
+      ?'<div class="money">'+money(a.bid)+"<s>next "+money(minBid(a))+"</s></div>"
+      :'<div class="money" style="color:var(--hazard)">'+money(a.floor)+"<s>free</s></div>";
+    return '<button class="row '+(a.tier==="front"?"front":"")+'" role="listitem" data-id="'+a.id+'">'+
+      '<span class="pos">'+pos+'</span><span class="bar" style="background:'+a.colour+'"></span>'+
+      '<span class="who">'+name+"<small>"+(a.mine?'<span class="mine">yours</span> ':"")+(a.brand?a.url:a.what)+"</small></span>"+price+"</button>";
+  }).join("");
+  $("#rows").querySelectorAll(".row").forEach(function(r){r.onclick=function(){openSheet(A.find(a=>a.id===r.dataset.id));};});
+}
+function renderStats(){
+  $("#stat-claimed").textContent=inCat("cars").filter(c=>c.brand).length+"/22";
+  $("#stat-value").textContent=money(A.reduce((s,a)=>s+a.bid,0));
+  const c=A.find(a=>a.label==="Circuit name");
+  $("#circuit-name").innerHTML=c.brand?"\u2014 "+c.brand:"<em>\u2014 unnamed, "+money(c.floor)+"</em>";
+  paintPlates();
+}
+function renderPodium(top){
+  $("#podium").innerHTML=(top||[null,null,null]).map(function(c,i){
+    return '<div class="step"><span class="pl">P'+(i+1)+"</span>"+
+      (c?(c.url?'<img src="'+ICON(c.url)+'" alt="">':"")+'<b>'+c.brand+"</b><small>from P"+c.startPos+"</small>"
+        :'<b style="color:var(--dim);font-style:italic;font-weight:400">Podium fills at 19:00</b>')+"</div>";
+  }).join("");
+}
+function pushRadio(t,warm){
+  feed.unshift({t:t,warm:warm});if(feed.length>6)feed.pop();
+  $("#radio-feed").innerHTML=feed.map((f,i)=>'<li class="'+(i===0&&f.warm?"new":"")+'">'+f.t+"</li>").join("");
+}
+function renderSwatches(){
+  $("#swatches").innerHTML=LIVERY.map(c=>'<button class="sw" style="background:'+c+'" data-c="'+c+'" aria-pressed="'+(c===livery)+'" aria-label="Livery"></button>').join("");
+  $("#swatches").querySelectorAll(".sw").forEach(function(b){b.onclick=function(){livery=b.dataset.c;renderSwatches();renderPreview();};});
+}
+function renderPreview(){
+  const brand=($("#f-brand").value||"").trim()||"Your brand";
+  const url=($("#f-url").value||"").trim().replace(/^https?:\/\//,"");
+  $("#preview").innerHTML='<div class="chip"><i style="background:'+livery+'"></i>'+
+    (url?'<img src="'+ICON(url)+'" alt="">':'<span style="width:14px"></span>')+"<b>"+brand+"</b></div>"+
+    "<span>how it reads on track</span>";
+}
+
+function openSheet(a){
+  if(!a)return;
+  sel=a;
+  $("#bid-title").textContent=a.label;
+  $("#bid-what").textContent=a.what;
+  $("#bid-held").innerHTML=a.brand
+    ?(a.url?'<img src="'+ICON(a.url)+'" alt="">':"")+"<b>"+a.brand+"</b><span>holds at "+money(a.bid)+"</span>"
+    :'<b style="color:var(--dim);font-style:italic;font-weight:400">Nobody has taken this yet</b>';
+  const m=minBid(a);
+  $("#bid-min-label").textContent=a.brand?"Your bid \u2014 "+money(m)+" or more to beat them":"Your bid \u2014 from "+money(m);
+  $("#bid-amt").value=m;
+  $("#bid-err").textContent="";
+  $("#take").textContent=racing?"Bidding closed until the flag":(a.brand?"Outbid for "+money(m):"Claim for "+money(m));
+  $("#take").disabled=racing;
+  renderPreview();
+  $("#scrim").classList.add("on");
+  $("#bid-amt").focus();
+}
+function closeSheet(){$("#scrim").classList.remove("on");}
+$("#close").onclick=closeSheet;
+$("#scrim").onclick=function(e){if(e.target===$("#scrim"))closeSheet();};
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet();});
+
+$("#b-min").onclick=function(){$("#bid-amt").value=minBid(sel);};
+$("#b-2x").onclick=function(){$("#bid-amt").value=minBid(sel)*2;};
+$("#b-5x").onclick=function(){$("#bid-amt").value=minBid(sel)*5;};
+$("#bid-amt").addEventListener("input",function(){$("#bid-err").textContent="";});
+$("#f-brand").addEventListener("input",renderPreview);
+$("#f-url").addEventListener("input",renderPreview);
+
+$("#take").onclick=function(){
+  if(racing){$("#bid-err").textContent="Bidding reopens at the chequered flag.";return;}
+  const amt=parseInt(String($("#bid-amt").value).replace(/[^0-9]/g,""),10),m=minBid(sel);
+  if(!amt){$("#bid-err").textContent="Enter an amount first.";return;}
+  if(amt<m){$("#bid-err").textContent="Too low. "+money(m)+" is the minimum here.";return;}
+  const brand=($("#f-brand").value||"").trim();
+  if(!brand){$("#bid-err").textContent="Add a brand name so we know what to print on the car.";$("#f-brand").focus();return;}
+  const loser=sel.brand;
+  if(loser)pushRadio("<em>"+loser+"</em> refunded "+money(sel.bid)+" in grid credit",false);
+  sel.brand=brand;
+  sel.url=($("#f-url").value||"").trim().replace(/^https?:\/\//,"")||"yoursite.com";
+  sel.bid=amt;sel.colour=livery;sel.mine=true;
+  pushRadio(loser?"<em>"+brand+"</em> took "+sel.label+" off "+loser+" for "+money(amt)
+                 :"<em>"+brand+"</em> claimed "+sel.label+" for "+money(amt),true);
+  closeSheet();renderTabs();renderRows();renderStats();
+};
+
+let secs=30;
+setInterval(function(){
+  if(racing)return;
+  secs--;
+  if(secs<=0){startRace();return;}
+  const h=Math.floor(secs/3600),m=Math.floor(secs%3600/60),s=secs%60;
+  $("#clock").textContent=[h,m,s].map(v=>String(v).padStart(2,"0")).join(":");
+},1000);
+
+function startRace(){
+  const runners=inCat("cars").filter(c=>c.brand);
+  if(runners.length<3){secs=30;return;}
+  racing=true;closeSheet();
+  $("#lights").classList.add("live");
+  $("#lights-label").textContent="Race in progress";
+  $("#clock").textContent="LIGHTS OUT";
+  $("#flag").className="flag green";$("#flag").textContent="Green flag";
+  pushRadio("Lights out at the "+(A.find(a=>a.label==="Race title").brand||"gridlockd")+" Grand Prix",true);
+
+  runners.forEach(function(c){
+    const n=N[c.id];
+    n.dist=START-c.grid*9;n.prog=-c.grid*9;
+    n.pace=1.5-c.grid*0.0045+(Math.random()-0.5)*0.62;
+  });
+
+  const TOTAL=3*LEN;
+  let launch=0,last=null;
+  requestAnimationFrame(function frame(ts){
+    if(last===null)last=ts;
+    const dt=Math.min(48,ts-last);last=ts;
+    launch=Math.min(1,launch+dt/1100);
+    const ease=launch*launch*(3-2*launch);
+    let done=true;
+    runners.forEach(function(c){
+      const n=N[c.id];
+      if(n.prog<TOTAL){
+        done=false;
+        if(launch>=1)n.prog+=n.pace*(dt/16)*(0.9+Math.random()*0.2)*1.9;
+        n.dist=START+n.prog;
+      }
+      const t=trackXY(n);
+      n.x=n.gx+(t.x-n.gx)*ease;
+      n.y=n.gy+(t.y-n.gy)*ease;
+    });
+    place();
+    const order=runners.slice().sort((a,b)=>N[b.id].prog-N[a.id].prog);
+    order.slice().reverse().forEach(function(c){N[c.id].g.parentNode.appendChild(N[c.id].g);});
+    liveRows(order);
+    if(!done)requestAnimationFrame(frame);else finish(order);
+  });
+}
+
+function liveRows(order){
+  if(tab!=="cars")return;
+  $("#rows").innerHTML=order.map(function(c,i){
+    const d=c.grid+1-(i+1);
+    return '<button class="row" role="listitem"><span class="pos">P'+(i+1)+"</span>"+
+      '<span class="bar" style="background:'+c.colour+'"></span>'+
+      '<span class="who"><b>'+c.brand+"</b><small>"+(c.mine?'<span class="mine">yours</span> ':"")+"started P"+(c.grid+1)+"</small></span>"+
+      '<span class="delta '+(d>0?"up":d<0?"down":"")+'">'+(d>0?"\u25b2"+d:d<0?"\u25bc"+(-d):"\u2014")+"</span></button>";
+  }).join("");
+}
+
+function finish(order){
+  racing=false;
+  $("#lights").classList.remove("live");
+  $("#lights-label").textContent="Next race in";
+  $("#flag").className="flag chq";$("#flag").textContent="Chequered flag";
+  order.slice(0,10).forEach(function(c,i){c.pts+=[25,18,15,12,10,8,6,4,2,1][i];});
+  renderPodium(order.slice(0,3).map(c=>({brand:c.brand,colour:c.colour,startPos:c.grid+1,url:c.url})));
+  pushRadio("<em>"+order[0].brand+"</em> wins from P"+(order[0].grid+1),true);
+  inCat("cars").forEach(function(c){const n=N[c.id];n.x=n.gx;n.y=n.gy;});
+  place();renderRows();renderStats();
+  secs=30;
+}
+
+renderTabs();renderRows();renderStats();renderSwatches();renderPodium(null);place();
+pushRadio("Grid opens at midnight, lights out every day at 19:00",false);
+pushRadio("<em>Foghorn</em> named today's race",false);
+</script>
+</body>
+</html>
